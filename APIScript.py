@@ -15,6 +15,7 @@ url = "http://192.168.190.21:3810/api/DataBridge/GetDataBridge"
 
 response = requests.get(url, params=params)
 data1 = response.json()
+df1 = pd.DataFrame.from_dict(data1)
 
 ## Filtering Column
 df2=df1[['TransactionNumber','CompletionDate','TransactionStatus','VehicleName','GrossWeight','TareWeight','NetWeight','VehicleDescription','MaterialName','MaterialDescription','CDE_Fleet_Name','CDE_Pit_Name','CDE_Cluster_Name','CDE_Dumping_Name']]
@@ -27,20 +28,17 @@ mycursor = conn.cursor()
 mycursor.execute(Sql_insert_query)
 
 result = mycursor.fetchone()
-result = result[0].strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
 
-mycursor.close() 
-conn.close() 
+#Filtering data based on last transaction
+result = result[0].strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
 
 ## Filter DF
 df_insert = df2[df2['CompletionDate'] > result ]
-#df_insert
 
 ## Insert to SQL DB 
-conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=KPCSGT-DB01.KPC.CO.ID;DATABASE=API_Timbang;UID=ihub;PWD=ihub')
+#conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=KPCSGT-DB01.KPC.CO.ID;DATABASE=API_Timbang;UID=ihub;PWD=ihub')
 #Sql_insert_query='''INSERT INTO Data_Timbang (TransactionStatus) VALUES ('Complete')'''
 #cursor = conn.cursor()
-
 #cursor.execute(Sql_insert_query)
 
 constring = "mssql+pyodbc://ihub:ihub@KPCSGT-DB01.KPC.CO.ID/API_Timbang?driver=ODBC+Driver+17+for+SQL+Server"
@@ -48,7 +46,10 @@ engine = sqlalchemy.create_engine(constring, echo=False)
 
 df_insert.to_sql('Data_Timbang', con=engine, if_exists="append", index=False)
 
+#close sql connection
 conn.commit()
+mycursor.close() 
+conn.close() 
 
 ## Check inserted Data
 query = 'SELECT * FROM Data_Timbang'
