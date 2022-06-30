@@ -52,6 +52,7 @@ mycursor.close()
 conn.close() 
 
 ## Check inserted Data
+conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER=KPCSGT-DB01.KPC.CO.ID;DATABASE=API_Timbang;UID=ihub;PWD=ihub')
 query = 'SELECT * FROM Data_Timbang'
 df = pd.read_sql(query, conn)
 conn.close() 
